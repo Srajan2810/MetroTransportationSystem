@@ -1,0 +1,36 @@
+stationCode,stationName,primaryLine,isInterchange,facilities,canvasX,canvasY
+SAM,Samaypur Badli,YELLOW,false,Elevator;Parking;ATM,380,40
+AZP,Azadpur,YELLOW,true,Elevator;Parking;ATM;Wifi,380,100
+NSP,Netaji Subhash Place,RED,true,Elevator;Parking;ATM;Wifi,280,120
+RIT,Rithala,RED,false,Elevator;Parking,180,120
+KGT,Kashmere Gate,YELLOW,true,Elevator;Parking;ATM;Wifi;FoodCourt,380,160
+CHW,Chandni Chowk,YELLOW,false,Elevator;ATM,380,210
+NDL,New Delhi,YELLOW,true,Elevator;Parking;ATM;Wifi;LuggageService,380,260
+RJC,Rajiv Chowk,YELLOW,true,Elevator;Parking;ATM;Wifi;HelpDesk;FoodCourt,380,310
+PAT,Patel Chowk,YELLOW,false,Elevator;ATM;Museum,380,360
+CST,Central Secretariat,YELLOW,true,Elevator;ATM;Wifi,380,410
+INA,Dilli Haat INA,YELLOW,true,Elevator;Parking;ATM;HandicraftMarket,380,460
+HZK,Hauz Khas,YELLOW,true,Elevator;Parking;ATM;Wifi;FoodCourt,380,510
+SAK,Saket,YELLOW,false,Elevator;Parking;ATM,380,560
+QUT,Qutab Minar,YELLOW,false,Elevator;Parking;TouristDesk,380,610
+MCC,Millennium City Centre,YELLOW,false,Elevator;Parking;ATM;ShoppingMall,380,670
+D21,Dwarka Sector 21,BLUE,true,Elevator;Parking;ATM;AirportCheckin,80,310
+JKW,Janakpuri West,BLUE,true,Elevator;Parking;ATM;Wifi,180,310
+KKB,Karol Bagh,BLUE,false,Elevator;ATM;Shopping,280,310
+RKN,Ramakrishna Ashram Marg,BLUE,false,Elevator;ATM,330,310
+MDH,Mandi House,BLUE,true,Elevator;ATM;CulturalCenter,450,310
+PRG,Supreme Court,BLUE,false,Elevator;ATM,520,310
+MAY,Mayur Vihar Phase 1,BLUE,true,Elevator;Parking;ATM,610,310
+BOG,Botanical Garden,BLUE,true,Elevator;Parking;ATM;Wifi,700,310
+NEC,Noida Electronic City,BLUE,false,Elevator;Parking;ATM,780,310
+SHD,Shahdara,RED,false,Elevator;Parking;ATM,520,160
+SHA,Shaheed Sthal,RED,false,Elevator;Parking,640,160
+LAJ,Lajpat Nagar,VIOLET,true,Elevator;Parking;ATM;MarketAccess,480,440
+KKA,Kalkaji Mandir,VIOLET,true,Elevator;Parking;ATM,480,510
+BAD,Badarpur Border,VIOLET,false,Elevator;Parking;ATM,480,590
+RNS,Raja Nahar Singh,VIOLET,false,Elevator;Parking,480,660
+OKH,Okhla Bird Sanctuary,MAGENTA,false,Elevator;NatureDesk,590,410
+MAJ,Majlis Park,PINK,false,Elevator;Parking,300,60
+SHV,Shiv Vihar,PINK,false,Elevator;Parking,680,110
+AER,Delhi Aerocity,AIRPORT,false,Elevator;Parking;HotelsAccess;LuggageCart,200,260
+IGI,IGI Airport T3,AIRPORT,true,Elevator;LuggageTrolley;FlightInfo;FoodCourt,140,260

@@ -1,0 +1,8 @@
+lineId,lineName,colorCode,firstTrain,lastTrain
+RED,Red Line,#E31837,05:30,23:30
+YELLOW,Yellow Line,#FFCC00,05:30,23:45
+BLUE,Blue Line,#0066B3,05:30,23:30
+VIOLET,Violet Line,#8A2BE2,06:00,23:15
+MAGENTA,Magenta Line,#D4006D,05:40,23:20
+PINK,Pink Line,#FF69B4,06:00,23:00
+AIRPORT,Airport Express,#F37023,04:45,23:40
