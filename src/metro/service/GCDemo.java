@@ -14,8 +14,8 @@ public class GCDemo {
 
         // Create temporary station objects
         for (int i = 0; i < 50000; i++) {
-            Station temp = new Station("Temp Station " + i, "Yellow", false, i * 0.5);
-            // By the end of loop, 'temp' is dereferenced and eligible for Garbage Collection
+            new Station("Temp Station " + i, "Yellow", false, i * 0.5);
+            // Objects are dereferenced and eligible for Garbage Collection
         }
 
         long memAfterAlloc = runtime.totalMemory() - runtime.freeMemory();

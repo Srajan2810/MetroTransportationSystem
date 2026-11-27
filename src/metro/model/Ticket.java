@@ -3,9 +3,7 @@ package metro.model;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-// CONCEPT: Association (Ticket associates with Passenger, Source, and Destination)
 public class Ticket {
-    // Static Variable
     public static int totalTickets = 0;
 
     private int ticketNumber;
@@ -36,16 +34,18 @@ public class Ticket {
 
     // Print Receipt
     public void printReceipt() {
+        String ticketType = (passenger != null) ? passenger.getPassengerType() : "Standard Token";
+
         System.out.println("\n+-------------------------------------------------------+");
         System.out.println("|              DELHI METRO RAIL CORPORATION             |");
         System.out.println("|                   JOURNEY TICKET                      |");
         System.out.println("+-------------------------------------------------------+");
-        System.out.printf("| Ticket No  : %-40d |\n", ticketNumber);
-        System.out.printf("| Date/Time  : %-40s |\n", issueTime);
-        System.out.printf("| Passenger  : %-40s |\n", (passenger != null ? passenger.getName() : "Standard Commuter"));
-        System.out.printf("| From       : %-40s |\n", source);
-        System.out.printf("| To         : %-40s |\n", destination);
-        System.out.printf("| Total Fare : ₹%-39.2f |\n", fare);
+        System.out.printf("| Ticket No   : %-39d |\n", ticketNumber);
+        System.out.printf("| Date/Time   : %-39s |\n", issueTime);
+        System.out.printf("| Ticket Type : %-39s |\n", ticketType);
+        System.out.printf("| From        : %-39s |\n", source);
+        System.out.printf("| To          : %-39s |\n", destination);
+        System.out.printf("| Total Fare  : ₹%-38.2f |\n", fare);
         System.out.println("+-------------------------------------------------------+");
         System.out.println("|             Please keep this ticket with you          |");
         System.out.println("+-------------------------------------------------------+\n");

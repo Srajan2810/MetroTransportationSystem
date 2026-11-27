@@ -2,6 +2,7 @@ package metro.service;
 
 import metro.exception.InvalidStationException;
 import metro.exception.RouteNotFoundException;
+import metro.model.Route;
 import metro.model.Station;
 
 import java.util.*;
@@ -14,6 +15,9 @@ public class MetroPlanner implements Searchable, FareCalculable {
     private Map<String, List<String>> graph;
     private Map<String, Station> stationDetails;
 
+    // Track connections and which Line connects any two adjacent stations
+    private Map<String, String> connectionLines;
+
     // CONCEPT: 2D Array (Fare Matrix between 4 sample zones)
     private static final int[][] ZONE_FARE_MATRIX = {
         { 10, 20, 30, 40 },
@@ -25,61 +29,154 @@ public class MetroPlanner implements Searchable, FareCalculable {
     public MetroPlanner() {
         this.graph = new HashMap<>();
         this.stationDetails = new HashMap<>();
+        this.connectionLines = new HashMap<>();
         initializeMetroNetwork();
     }
 
-    // Direct in-code network initialization (Easy to explain in Viva, no external file dependencies!)
+    // Official Delhi Metro Network Initialization
     private void initializeMetroNetwork() {
-        // 1. Add Stations
-        addStation(new Station("Samaypur Badli", "Yellow", false, 0.0));
-        addStation(new Station("Azadpur", "Yellow", true, 4.2));
-        addStation(new Station("Kashmere Gate", "Yellow", true, 9.5));
-        addStation(new Station("Chandni Chowk", "Yellow", false, 11.0));
-        addStation(new Station("New Delhi", "Yellow", true, 12.6));
-        addStation(new Station("Rajiv Chowk", "Yellow", true, 13.8));
-        addStation(new Station("Central Secretariat", "Yellow", true, 16.5));
-        addStation(new Station("Hauz Khas", "Yellow", true, 23.5));
-        addStation(new Station("Huda City Centre", "Yellow", false, 37.0));
+        // 1. Line 1 = Red Line (Rithala to Shaheed Sthal) - 29 Stations
+        String[] redLine = {
+            "Rithala", "Rohini West", "Rohini East", "Pitampura", "Kohat Enclave",
+            "Netaji Subhash Place", "Keshav Puram", "Kanhaiya Nagar", "Inderlok",
+            "Shastri Nagar", "Pratap Nagar", "Pulbangash", "Tis Hazari",
+            "Kashmere Gate", "Shastri Park", "Seelampur", "Welcome", "Shahdara",
+            "Mansarovar Park", "Jhilmil", "Dilshad Garden", "Shahid Nagar",
+            "Raj Bagh", "Major Mohit Sharma Rajendra Nagar", "Shyam Park",
+            "Mohan Nagar", "Arthala", "Hindon River", "Shaheed Sthal (New Bus Adda)"
+        };
+        loadLine("Red", redLine);
 
-        addStation(new Station("Dwarka Sector 21", "Blue", true, 0.0));
-        addStation(new Station("Janakpuri West", "Blue", true, 12.0));
-        addStation(new Station("Karol Bagh", "Blue", false, 21.8));
-        addStation(new Station("Mandi House", "Blue", true, 15.7));
-        addStation(new Station("Botanical Garden", "Blue", true, 26.5));
-        addStation(new Station("Noida City Centre", "Blue", false, 34.0));
+        // 2. Line 2 = Yellow Line (Samaypur Badli to Millennium City Centre Gurugram) - 37 Stations
+        String[] yellowLine = {
+            "Samaypur Badli", "Rohini Sector 18, 19", "Haiderpur Badli Mor",
+            "Jahangirpuri", "Adarsh Nagar", "Azadpur", "Model Town",
+            "Guru Tegh Bahadur Nagar", "Vishwavidyalaya", "Vidhan Sabha",
+            "Civil Lines", "Kashmere Gate", "Chandni Chowk", "Chawri Bazar",
+            "New Delhi", "Rajiv Chowk", "Patel Chowk", "Central Secretariat",
+            "Udyog Bhawan", "Lok Kalyan Marg", "Jor Bagh", "Dilli Haat INA",
+            "AIIMS", "Green Park", "Hauz Khas", "Malviya Nagar", "Saket",
+            "Qutab Minar", "Chhattarpur", "Sultanpur", "Ghitorni", "Arjan Garh",
+            "Guru Dronacharya", "Sikanderpur", "MG Road", "IFFCO Chowk",
+            "Millennium City Centre Gurugram"
+        };
+        loadLine("Yellow", yellowLine);
 
-        addStation(new Station("Lajpat Nagar", "Violet", true, 21.6));
-        addStation(new Station("Kalkaji Mandir", "Violet", true, 26.2));
+        // 3. Line 3 = Blue Line (Dwarka Sector 21 to Noida Electronic City) - 50 Stations
+        String[] blueMainLine = {
+            "Dwarka Sector 21", "Dwarka Sector 8", "Dwarka Sector 9", "Dwarka Sector 10",
+            "Dwarka Sector 11", "Dwarka Sector 12", "Dwarka Sector 13", "Dwarka Sector 14",
+            "Dwarka", "Dwarka Mor", "Nawada", "Uttam Nagar West", "Uttam Nagar East",
+            "Janakpuri West", "Janakpuri East", "Tilak Nagar", "Subhash Nagar",
+            "Tagore Garden", "Rajouri Garden", "Ramesh Nagar", "Moti Nagar",
+            "Kirti Nagar", "Shadipur", "Patel Nagar", "Rajendra Place",
+            "Karol Bagh", "Jhandewalan", "RK Ashram Marg", "Rajiv Chowk",
+            "Barakhamba Road", "Mandi House", "Supreme Court", "Indraprastha",
+            "Yamuna Bank", "Akshardham", "Mayur Vihar-I", "Mayur Vihar Extension",
+            "New Ashok Nagar", "Noida Sector 15", "Noida Sector 16", "Noida Sector 18",
+            "Botanical Garden", "Golf Course", "Noida City Centre", "Noida Sector 34",
+            "Noida Sector 52", "Noida Sector 61", "Noida Sector 59", "Noida Sector 62",
+            "Noida Electronic City"
+        };
+        loadLine("Blue", blueMainLine);
 
-        // 2. Connect Adjacent Stations (Bidirectional edges)
-        // Yellow Line
-        connect("Samaypur Badli", "Azadpur");
-        connect("Azadpur", "Kashmere Gate");
-        connect("Kashmere Gate", "Chandni Chowk");
-        connect("Chandni Chowk", "New Delhi");
-        connect("New Delhi", "Rajiv Chowk");
-        connect("Rajiv Chowk", "Central Secretariat");
-        connect("Central Secretariat", "Hauz Khas");
-        connect("Hauz Khas", "Huda City Centre");
+        // 4. Line 4 = Blue Line Branch (Yamuna Bank to Vaishali) - 8 Stations
+        String[] blueBranchLine = {
+            "Yamuna Bank", "Laxmi Nagar", "Nirman Vihar", "Preet Vihar",
+            "Karkarduma", "Anand Vihar ISBT", "Kaushambi", "Vaishali"
+        };
+        loadLine("Blue", blueBranchLine);
 
-        // Blue Line
-        connect("Dwarka Sector 21", "Janakpuri West");
-        connect("Janakpuri West", "Karol Bagh");
-        connect("Karol Bagh", "Rajiv Chowk");
-        connect("Rajiv Chowk", "Mandi House");
-        connect("Mandi House", "Botanical Garden");
-        connect("Botanical Garden", "Noida City Centre");
+        // 5. Line 5 = Green Line (Inderlok / Kirti Nagar to Brig. Hoshiar Singh) - 24 Stations
+        String[] greenLine = {
+            "Inderlok", "Ashok Park Main", "Punjabi Bagh", "Punjabi Bagh West",
+            "Shivaji Park", "Madipur", "Paschim Vihar East", "Paschim Vihar West",
+            "Peeragarhi", "Udyog Nagar", "Maharaja Surajmal Stadium", "Nangloi",
+            "Nangloi Railway Station", "Rajdhani Park", "Mundka", "Mundka Industrial Area",
+            "Ghevra Metro Station", "Tikri Kalan", "Tikri Border",
+            "Pandit Shree Ram Sharma", "Bahadurgarh City", "Brig. Hoshiar Singh"
+        };
+        loadLine("Green", greenLine);
+        // Connect Green line branch to Kirti Nagar (Blue Line interchange)
+        connect("Kirti Nagar", "Ashok Park Main", "Green");
 
-        // Violet Line
-        connect("Kashmere Gate", "Mandi House");
-        connect("Mandi House", "Central Secretariat");
-        connect("Central Secretariat", "Lajpat Nagar");
-        connect("Lajpat Nagar", "Kalkaji Mandir");
+        // 6. Line 6 = Violet Line (Kashmere Gate to Raja Nahar Singh) - 34 Stations
+        String[] violetLine = {
+            "Kashmere Gate", "Lal Quila", "Jama Masjid", "Delhi Gate", "ITO",
+            "Mandi House", "Janpath", "Central Secretariat", "Khan Market",
+            "Jawaharlal Nehru Stadium", "Jangpura", "Lajpat Nagar", "Moolchand",
+            "Kailash Colony", "Nehru Place", "Kalkaji Mandir", "Govind Puri",
+            "Harkesh Nagar Okhla", "Jasola Apollo", "Sarita Vihar", "Mohan Estate",
+            "Tughlakabad Station", "Badarpur Border", "Sarai", "NHPC Chowk",
+            "Mewala Maharajpur", "Sector 28", "Badkal Mor", "Old Faridabad",
+            "Neelam Chowk Ajronda", "Bata Chowk", "Escorts Mujesar",
+            "Sant Surdas (Sihi)", "Raja Nahar Singh (Ballabhgarh)"
+        };
+        loadLine("Violet", violetLine);
 
-        // Magenta Line (Connecting Janakpuri West, Hauz Khas, Kalkaji Mandir, Botanical Garden)
-        connect("Janakpuri West", "Hauz Khas");
-        connect("Hauz Khas", "Kalkaji Mandir");
-        connect("Kalkaji Mandir", "Botanical Garden");
+        // 7. Line 7 = Pink Line (Majlis Park to Shiv Vihar) - 38 Stations
+        String[] pinkLine = {
+            "Majlis Park", "Azadpur", "Shalimar Bagh", "Netaji Subhash Place",
+            "Shakurpur", "Punjabi Bagh West", "ESI-Basaidarapur", "Rajouri Garden",
+            "Maya Puri", "Naraina Vihar", "Delhi Cantt", "Durgabai Deshmukh South Campus",
+            "Sir M. Vishweshwaraiah Moti Bagh", "Bhikaji Cama Place", "Sarojini Nagar",
+            "Dilli Haat INA", "South Extension", "Lajpat Nagar", "Vinobapuri",
+            "Ashram", "Sarai Kale Khan-Nizamuddin", "Mayur Vihar-I", "Mayur Vihar Pocket 1",
+            "Trilokpuri-Sanjay Lake", "East Vinod Nagar-Mayur Vihar II",
+            "Mandawali-West Vinod Nagar", "IP Extension", "Anand Vihar ISBT",
+            "Karkarduma", "Karkarduma Court", "Krishna Nagar", "East Azad Nagar",
+            "Welcome", "Jaffrabad", "Maujpur-Babarpur", "Gokulpuri",
+            "Johri Enclave", "Shiv Vihar"
+        };
+        loadLine("Pink", pinkLine);
+
+        // 8. Line 8 = Magenta Line (Janakpuri West to Botanical Garden) - 25 Stations
+        String[] magentaLine = {
+            "Janakpuri West", "Dabri Mor-Janakpuri South", "Dashrath Puri", "Palam",
+            "Sadar Bazar Cantonment", "Terminal 1-IGI Airport", "Shankar Vihar",
+            "Vasant Vihar", "Munirka", "RK Puram", "IIT Delhi", "Hauz Khas",
+            "Panchsheel Park", "Chirag Delhi", "Greater Kailash", "Nehru Enclave",
+            "Kalkaji Mandir", "Okhla NSIC", "Sukhdev Vihar", "Jamia Millia Islamia",
+            "Okhla Vihar", "Jasola Vihar Shaheen Bagh", "Kalindi Kunj",
+            "Okhla Bird Sanctuary", "Botanical Garden"
+        };
+        loadLine("Magenta", magentaLine);
+
+        // 9. Orange Line (Airport Express: New Delhi to Yashobhoomi Dwarka Sector-25) - 7 Stations
+        String[] airportExpress = {
+            "New Delhi", "Shivaji Stadium", "Dhaula Kuan", "Delhi Aerocity",
+            "Airport (T-3)", "Dwarka Sector 21", "Yashobhoomi Dwarka Sector-25"
+        };
+        loadLine("Airport Express", airportExpress);
+
+        // 10. Line 9 = Grey Line (Dwarka to Dhansa Bus Stand) - 4 Stations
+        String[] greyLine = {
+            "Dwarka", "Nangli", "Najafgarh", "Dhansa Bus Stand"
+        };
+        loadLine("Grey", greyLine);
+    }
+
+    private void loadLine(String lineName, String[] stationNames) {
+        for (int i = 0; i < stationNames.length; i++) {
+            String name = stationNames[i];
+            Station existing = getStation(name);
+
+            if (existing == null) {
+                // First time registering this station
+                addStation(new Station(name, lineName, false, i * 1.4));
+            } else {
+                // Station already exists -> Mark as an interchange hub!
+                existing.setInterchange(true);
+                if (!existing.getLine().contains(lineName)) {
+                    existing.setLine(existing.getLine() + " / " + lineName);
+                }
+            }
+
+            // Connect adjacent stations on this line
+            if (i > 0) {
+                connect(stationNames[i - 1], name, lineName);
+            }
+        }
     }
 
     private void addStation(Station s) {
@@ -87,30 +184,65 @@ public class MetroPlanner implements Searchable, FareCalculable {
         graph.putIfAbsent(s.getName(), new ArrayList<>());
     }
 
-    private void connect(String s1, String s2) {
-        graph.get(s1).add(s2);
-        graph.get(s2).add(s1);
+    private String makeKey(String s1, String s2) {
+        return s1.trim().toLowerCase() + "<->" + s2.trim().toLowerCase();
+    }
+
+    private void connect(String s1, String s2, String lineName) {
+        graph.putIfAbsent(s1, new ArrayList<>());
+        graph.putIfAbsent(s2, new ArrayList<>());
+
+        if (!graph.get(s1).contains(s2)) {
+            graph.get(s1).add(s2);
+        }
+        if (!graph.get(s2).contains(s1)) {
+            graph.get(s2).add(s1);
+        }
+
+        connectionLines.put(makeKey(s1, s2), lineName);
+        connectionLines.put(makeKey(s2, s1), lineName);
+    }
+
+    public String getLineBetween(String s1, String s2) {
+        String line = connectionLines.get(makeKey(s1, s2));
+        return (line != null) ? line : "Metro";
     }
 
     public Station getStation(String name) {
         if (name == null) return null;
-        return stationDetails.get(name.trim().toLowerCase());
+        String clean = name.trim().toLowerCase();
+
+        // 1. Direct exact match
+        Station direct = stationDetails.get(clean);
+        if (direct != null) return direct;
+
+        // 2. Partial match
+        for (Map.Entry<String, Station> entry : stationDetails.entrySet()) {
+            if (entry.getKey().equalsIgnoreCase(clean) ||
+                entry.getKey().contains(clean) ||
+                clean.contains(entry.getKey())) {
+                return entry.getValue();
+            }
+        }
+        return null;
     }
 
     public List<String> getAllStationNames() {
         List<String> list = new ArrayList<>(graph.keySet());
-        Collections.sort(list); // Sort alphabetically
+        Collections.sort(list);
         return list;
     }
 
+    public int getTotalStationsCount() {
+        return stationDetails.size();
+    }
+
     // =========================================================================
-    // Breadth-First Search (BFS) for Shortest Route
+    // Breadth-First Search (BFS) & Comprehensive Route Planning
     // =========================================================================
-    @Override
-    public List<String> findShortestRoute(String source, String destination)
+    public Route planRoute(String source, String destination)
             throws InvalidStationException, RouteNotFoundException {
 
-        // Validate stations exist
         Station srcStation = getStation(source);
         Station dstStation = getStation(destination);
 
@@ -121,7 +253,7 @@ public class MetroPlanner implements Searchable, FareCalculable {
         String end = dstStation.getName();
 
         if (start.equalsIgnoreCase(end)) {
-            return Collections.singletonList(start);
+            return new Route(start, end, Collections.singletonList(start), Collections.emptyList());
         }
 
         // BFS Data Structures
@@ -163,7 +295,19 @@ public class MetroPlanner implements Searchable, FareCalculable {
             curr = parent.get(curr);
         }
 
-        return path;
+        // Gather corresponding Metro Lines for each leg
+        List<String> lines = new ArrayList<>();
+        for (int i = 0; i < path.size() - 1; i++) {
+            lines.add(getLineBetween(path.get(i), path.get(i + 1)));
+        }
+
+        return new Route(start, end, path, lines);
+    }
+
+    @Override
+    public List<String> findShortestRoute(String source, String destination)
+            throws InvalidStationException, RouteNotFoundException {
+        return planRoute(source, destination).getStationPath();
     }
 
     // =========================================================================
@@ -171,24 +315,18 @@ public class MetroPlanner implements Searchable, FareCalculable {
     // =========================================================================
     @Override
     public double calculateFare(int stops, double distanceKm) {
-        // Standard DMRC Slabs:
-        // 0-2 stops: ₹10
-        // 3-5 stops: ₹20
-        // 6-9 stops: ₹30
-        // 10-14 stops: ₹40
-        // 15+ stops: ₹50
         if (stops <= 2) return 10.0;
         else if (stops <= 5) return 20.0;
         else if (stops <= 9) return 30.0;
         else if (stops <= 14) return 40.0;
-        else return 50.0;
+        else if (stops <= 20) return 50.0;
+        else return 60.0;
     }
 
-    // 2D Array Matrix Lookup demonstration
     public int getZoneFare(int zone1, int zone2) {
         if (zone1 >= 0 && zone1 < 4 && zone2 >= 0 && zone2 < 4) {
             return ZONE_FARE_MATRIX[zone1][zone2];
         }
-        return 20; // Default
+        return 20;
     }
 }

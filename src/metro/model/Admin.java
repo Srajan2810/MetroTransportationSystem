@@ -1,6 +1,5 @@
 package metro.model;
 
-// CONCEPT: Hierarchical Inheritance (Admin extends Person, parallel to Passenger)
 public class Admin extends Person {
     private String adminId;
 

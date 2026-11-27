@@ -1,7 +1,5 @@
 package metro.model;
 
-// CONCEPT: Single Inheritance (Passenger extends Person)
-// CONCEPT: Abstract Class with Abstract Method
 public abstract class Passenger extends Person {
     protected String passengerType;
 
@@ -14,7 +12,6 @@ public abstract class Passenger extends Person {
         return passengerType;
     }
 
-    // CONCEPT: Abstract Method (subclasses define their specific discount percentage)
     public abstract double getDiscountRate();
 
     @Override

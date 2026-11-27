@@ -2,8 +2,6 @@ package metro.model;
 
 import java.util.ArrayList;
 import java.util.List;
-
-// CONCEPT: Aggregation (MetroLine aggregates Station objects; Stations exist independently)
 public class MetroLine {
     private String lineName;
     private String color;
